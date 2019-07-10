@@ -39,16 +39,16 @@ class DueDateCalculatorTest {
     private fun dueToWeekend(closeDay: Int, dayOnWeekend: Int, dueDay: Int) {
         val expected = LocalDate.of(2019, Month.JUNE, dueDay)
         val calculatedDate = LocalDate.of(2019, Month.JUNE, dayOnWeekend)
-        every { workDayService.nextFor(calculatedDate) } returns expected
+        every { workDayService.nextForInclusive(calculatedDate) } returns expected
 
         val closeDate = LocalDate.of(2019, Month.JUNE, closeDay)
         val dueDate = dueDateCalculator.calculate(closeDate)
         assertThat(dueDate).isEqualTo(expected)
 
         verifyAll {
-            workDayService.nextFor(calculatedDate)
+            workDayService.nextForInclusive(calculatedDate)
         }
-        confirmVerified(workDayService)
+        confirmAllVerified()
     }
 
     @Test
@@ -62,7 +62,7 @@ class DueDateCalculatorTest {
     }
 
     private fun inRangeDueDate(closeDay: Int, dueDayExpected: Int) {
-        every { workDayService.nextFor(any()) } returnsArgument 0
+        every { workDayService.nextForInclusive(any()) } returnsArgument 0
 
         val closeDate = LocalDate.of(2019, Month.JUNE, closeDay)
         val dueDate = dueDateCalculator.calculate(closeDate)
@@ -70,25 +70,25 @@ class DueDateCalculatorTest {
         assertThat(dueDate).isEqualTo(expected)
 
         verifyAll {
-            workDayService.nextFor(expected)
+            workDayService.nextForInclusive(expected)
         }
-        confirmVerified(workDayService)
+        confirmAllVerified()
     }
 
     @Test
     fun `closing on holiday due date to next day`() {
         val holiday = LocalDate.of(2020, Month.SEPTEMBER, 7)
         val expected = LocalDate.of(2020, Month.SEPTEMBER, 8)
-        every { workDayService.nextFor(holiday) } returns expected
+        every { workDayService.nextForInclusive(holiday) } returns expected
 
         val closeDate = LocalDate.of(2020, Month.SEPTEMBER, 2)
         val dueDate = dueDateCalculator.calculate(closeDate)
         assertThat(dueDate).isEqualTo(expected)
 
         verifyAll {
-            workDayService.nextFor(holiday)
+            workDayService.nextForInclusive(holiday)
         }
-        confirmVerified(workDayService)
+        confirmAllVerified()
     }
 
     @Test
@@ -97,7 +97,7 @@ class DueDateCalculatorTest {
         val afterHoliday = LocalDate.of(2020, Month.SEPTEMBER, 8)
         val expected = LocalDate.of(2020, Month.SEPTEMBER, 4)
 
-        every { workDayService.nextFor(calculatedDate) } returns afterHoliday
+        every { workDayService.nextForInclusive(calculatedDate) } returns afterHoliday
         every { workDayService.isValid(expected) } returns true
 
         val closeDate = LocalDate.of(2020, Month.AUGUST, 31)
@@ -105,9 +105,13 @@ class DueDateCalculatorTest {
         assertThat(dueDate).isEqualTo(expected)
 
         verifyAll {
-            workDayService.nextFor(calculatedDate)
+            workDayService.nextForInclusive(calculatedDate)
             workDayService.isValid(expected)
         }
+        confirmAllVerified()
+    }
+
+    private fun confirmAllVerified() {
         confirmVerified(workDayService)
     }
 }
